@@ -1,7 +1,7 @@
 <p align="center"><a href="#readme"><img src="https://gh.kaos.st/jira-avatar-replacer.svg"/></a></p>
 
 <p align="center">
-  <a href="https://travis-ci.com/essentialkaos/jira-avatar-replacer"><img src="https://travis-ci.com/essentialkaos/jira-avatar-replacer.svg"></a>
+  <a href="https://travis-ci.com/github/essentialkaos/jira-avatars-replacer"><img src="https://travis-ci.com/essentialkaos/jira-avatars-replacer.svg"></a>
   <a href="https://essentialkaos.com/ekol"><img src="https://gh.kaos.st/ekol.svg"></a>
 </p>
 
