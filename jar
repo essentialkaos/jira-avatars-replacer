@@ -1,0 +1,431 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC1117,SC2034,SC2154,SC2181
+
+########################################################################################
+
+APP="jar"
+VER="1.0.0"
+DESC="JIRA HQ avatars replacer"
+
+########################################################################################
+
+NORM=0
+BOLD=1
+UNLN=4
+RED=31
+GREEN=32
+YELLOW=33
+BLUE=34
+MAG=35
+CYAN=36
+GREY=37
+DARK=90
+
+CL_NORM="\e[0m"
+CL_BOLD="\e[0;${BOLD};49m"
+CL_UNLN="\e[0;${UNLN};49m"
+CL_RED="\e[0;${RED};49m"
+CL_GREEN="\e[0;${GREEN};49m"
+CL_YELLOW="\e[0;${YELLOW};49m"
+CL_BLUE="\e[0;${BLUE};49m"
+CL_MAG="\e[0;${MAG};49m"
+CL_CYAN="\e[0;${CYAN};49m"
+CL_GREY="\e[0;${GREY};49m"
+CL_DARK="\e[0;${DARK};49m"
+CL_BL_RED="\e[1;${RED};49m"
+CL_BL_GREEN="\e[1;${GREEN};49m"
+CL_BL_YELLOW="\e[1;${YELLOW};49m"
+CL_BL_BLUE="\e[1;${BLUE};49m"
+CL_BL_MAG="\e[1;${MAG};49m"
+CL_BL_CYAN="\e[1;${CYAN};49m"
+CL_BL_GREY="\e[1;${GREY};49m"
+
+########################################################################################
+
+MIN_WIDTH=64
+MIN_HEIGHT=64
+
+########################################################################################
+
+SUPPORTED_OPTS="!no_colors !help !usage !version !ver"
+SHORT_OPTS="nc:!no_colors h:!help v:!version"
+
+########################################################################################
+
+data_dir="${JIRA_DIR:-/srv/jira-data}/data/avatars"
+
+########################################################################################
+
+main() {
+  if [[ ! -t 1 || -n "$no_colors" ]] ; then
+    unset NORM BOLD UNLN RED GREEN YELLOW BLUE MAG CYAN GREY DARK
+    unset CL_NORM CL_BOLD CL_UNLN CL_RED CL_GREEN CL_YELLOW CL_BLUE CL_MAG CL_CYAN CL_GREY CL_DARK
+    unset CL_BL_RED CL_BL_GREEN CL_BL_YELLOW CL_BL_BLUE CL_BL_MAG CL_BL_CYAN CL_BL_GREY CL_BL_DARK
+  fi
+
+  if [[ -n "$ver" || -n "$version" ]] ; then
+    about
+    exit 0
+  fi
+
+  if [[ -n "$help" || -n "$usage" || $# -ne 2 ]] ; then
+    usage
+    exit 0
+  fi
+
+  checkConfiguration
+
+  update "$@"
+}
+
+checkConfiguration() {
+  if [[ -z "$data_dir" ]] ; then
+    error "JIRA_DIR variable must be set"
+    exit 1
+  fi
+
+  if [[ ! -d "$data_dir" ]] ; then
+    error "Data directory $data_dir doesn't exist"
+    exit 1 
+  fi
+
+  if [[ ! -w "$data_dir" ]] ; then
+    error "Data directory $data_dir is not writable"
+    exit 1 
+  fi
+
+  if ! isAppInstalled "convert" ; then
+    error "This utility requires ImageMagick"
+    exit 1
+  fi
+}
+
+update() {
+  local image="$1"
+  local id="$2"
+
+  if [[ ! -f "$image" ]] ; then
+    error "File $image doesn't exist"
+    exit 1
+  fi
+
+  local uuid resp
+
+  uuid=$(getAvatarUUID "$id")
+
+  if [[ -z "$uuid" ]] ; then
+    error "Can't find avatar with given ID"
+    exit 1
+  fi
+
+  show ""
+  show "${CL_BOLD}Avatar found!${CL_NORM} ${CL_DARK}(UUID: ${uuid})${CL_NORM}\n"
+
+  read -r -p "Replace avatar? [y/N] " resp
+
+  if [[ "$resp" != "y" && "$resp" != "Y" ]] ; then
+    exit 0
+  fi
+
+  show "\nUpdating avatars to HQ versions…\n" $BOLD
+
+  convertAvatars "$image" "$id" "$uuid"
+
+  show "\nUpdating complete!\n" $GREEN
+}
+
+checkImage() {
+  local image="$1"
+
+  if [[ ! -f "$image" ]] ; then
+    error "File $image doesn't exist"
+    exit 1
+  fi
+
+  if [[ $(getImageWidth "$image") -lt $MIN_WIDTH ]] ; then
+    error "Image width must be $MIN_WIDTH pixels or more"
+    exit 1
+  fi
+
+  if [[ $(getImageHeight "$image") -lt $MIN_HEIGHT ]] ; then
+    error "Image height must be $MIN_HEIGHT pixels or more"
+    exit 1
+  fi
+}
+
+convertAvatars() {
+  local image="$1"
+  local id="$2"
+  local uuid="$3"
+
+  local size sizes
+  sizes=("xsmall" "small" "medium" "xlarge" "xxlarge" "xxxlarge" "xxlarge@2x" "xxxlarge@2x")
+
+  convertAvatar "$image" "$id" "$uuid" ""
+
+  for size in "${sizes[@]}" ; do
+    convertAvatar "$image" "$id" "$uuid" "$size"
+  done
+}
+
+convertAvatar() {
+  local image="$1"
+  local id="$2"
+  local uuid="$3"
+  local size="$4"
+
+  local new_size output
+
+  case $size in
+    "")            new_size="96x96" ;;
+    "xsmall")      new_size="32x32" ;;
+    "small")       new_size="48x48" ;;
+    "medium")      new_size="64x64" ;;
+    "xlarge")      new_size="128x128" ;;
+    "xxlarge")     new_size="192x192" ;;
+    "xxxlarge")    new_size="256x256" ;;
+    "xxlarge@2x")  new_size="384x384" ;;
+    "xxxlarge@2x") new_size="512x512" ;;
+  esac
+
+  if [[ -z "$size" ]] ; then
+    output="${id}_${uuid}.png"
+  else
+    output="${id}_${size}_${uuid}.png"
+  fi
+
+  convert "$image" -filter Lanczos -resize "$new_size" "$data_dir/$output" &> /dev/null
+
+  if [[ $? -eq 0 ]] ; then
+    show "${CL_GREEN}✔  ${CL_NORM}$output ${CL_DARK}→ $new_size${CL_NORM}"
+  else
+    show "${CL_RED}✖  ${CL_NORM}$output"
+  fi
+}
+
+getAvatarUUID() {
+  local id="$1"
+  local avatar uuid
+
+  avatar=$(find "$data_dir" -type f -name "${id}_small_*")
+
+  if [[ -z "$avatar" ]] ; then
+    echo ""
+    return
+  fi
+
+  uuid=$(basename "$avatar" | sed 's/.png//' | cut -f3 -d'_')
+
+  echo "$uuid"
+}
+
+getImageWidth() {
+  identify -format "%[fx:w]" "$1"
+}
+
+getImageHeight() {
+  identify -format "%[fx:h]" "$1"
+}
+
+# Checks if app is installed
+#
+# 1: Binary name
+#
+# Code: Yes
+# Echo: No
+isAppInstalled() {
+  type -P "$1" &> /dev/null
+  return $?
+}
+
+########################################################################################
+
+# Show message
+#
+# 1: Message (String)
+# 2: Message color (Number) [Optional]
+#
+# Code: No
+# Echo: No
+show() {
+  if [[ -n "$2" && -z "$no_colors" ]] ; then
+    echo -e "\e[${2}m${1}\e[0m"
+  else
+    echo -e "$*"
+  fi
+}
+
+# Print error message
+#
+# 1: Message (String)
+# 2: Message color (Number) [Optional]
+#
+# Code: No
+# Echo: No
+error() {
+  show "$@" $RED 1>&2
+}
+
+# Print usage info
+#
+# Code: No
+# Echo: No
+usage() {
+  show ""
+  show "${CL_BOLD}Usage:${CL_NORM} jar ${CL_GREEN}{options}${CL_NORM} image avatar-id"
+  show ""
+  show "Options" $BOLD
+  show ""
+  if [[ -n "$DARK" ]] ; then
+    show "  ${CL_GREEN}--no-color, -nc${CL_NORM} ${CL_DARK}..${CL_NORM} Disable colors in output"
+    show "  ${CL_GREEN}--help, -h${CL_NORM} ${CL_DARK}.......${CL_NORM} Show this help message"
+    show "  ${CL_GREEN}--version, -v${CL_NORM} ${CL_DARK}....${CL_NORM} Show information about version"
+  else
+    show "  ${CL_GREEN}--no-color, -nc${CL_NORM}    Disable colors in output"
+    show "  ${CL_GREEN}--help, -h${CL_NORM}         Show this help message"
+    show "  ${CL_GREEN}--version, -v${CL_NORM}      Show information about version"
+  fi
+  show ""
+  show "Examples" $BOLD
+  show ""
+  show "  JIRA_DIR=/opt/jira-data jar image.png 18311"
+  show "  Update avatar with ID 18311" $DARK
+  show ""
+}
+
+# Show info about version
+#
+# Code: No
+# Echo: No
+about() {
+  show ""
+  show "${CL_BL_CYAN}$APP${CL_NORM} ${CL_CYAN}$VER${CL_NORM} - $DESC"
+  show ""
+  show "Copyright (C) 2009-$(date +%Y) ESSENTIAL KAOS" $DARK
+  show "Essential Kaos Open Source License <https://essentialkaos.com/ekol>" $DARK
+  show ""
+}
+
+# Show warning message about unsupported argument
+#
+# 1: Argument name (String)
+#
+# Code: No
+# Echo: No
+showArgWarn() {
+  error "Unknown argument $1" $RED
+  exit 1
+}
+
+## OPTIONS PARSING 5 ###################################################################
+
+if [[ $# -eq 0 ]] ; then
+  main
+  exit $?
+fi
+
+unset opt optn optm optv optt optk
+
+optv="$*" ; optt=""
+
+while [[ -n "$1" ]] ; do
+  if [[ "$1" =~ \  && -n "$optn" ]] ; then
+    declare "$optn=$1"
+
+    unset optn && shift && continue
+  elif [[ $1 =~ ^-{1}[a-zA-Z0-9]{1,2}+.*$ ]] ; then
+    optm=${1:1}
+
+    if [[ \ $SHORT_OPTS\  =~ \ $optm:!?([a-zA-Z0-9_]*) ]] ; then
+      opt="${BASH_REMATCH[1]}"
+    else
+      declare -F showOptWarn &>/dev/null && showOptWarn "-$optm"
+      shift && continue
+    fi
+
+    if [[ -z "$optn" ]] ; then
+      optn=$opt
+    else
+      # shellcheck disable=SC2015
+      [[ -z "$optk" ]] && ( declare -F showOptValWarn &>/dev/null && showOptValWarn "--$optn" ) || declare "$optn=true"
+      optn=$opt
+    fi
+
+    if [[ ! $SUPPORTED_OPTS\  =~ !?$optn\  ]] ; then
+      declare -F showOptWarn &>/dev/null && showOptWarn "-$optm"
+      shift && continue
+    fi
+
+    if [[ ${BASH_REMATCH[0]:0:1} == "!" ]] ; then
+      declare "$optn=true" ; unset optn ; optk=true
+    else
+      unset optk
+    fi
+
+    shift && continue
+  elif [[ "$1" =~ ^-{2}[a-zA-Z]{1}[a-zA-Z0-9_-]+.*$ ]] ; then
+    opt=${1:2}
+
+    if [[ $opt == *=* ]] ; then
+      IFS="=" read -ra opt <<< "$opt"
+
+      optm="${opt[0]}" ; optm=${optm//-/_}
+
+      if [[ ! $SUPPORTED_OPTS\  =~ $optm\  ]] ; then
+        declare -F showOptWarn &>/dev/null && showOptWarn "--${opt[0]//_/-}"
+        shift && continue
+      fi
+
+      # shellcheck disable=SC2015
+      [[ -n "${!optm}" && $MERGEABLE_OPTS\  =~ $optm\  ]] && declare "$optm=${!optm} ${opt[*]:1:99}" || declare "$optm=${opt[*]:1:99}"
+
+      unset optm && shift && continue
+    else
+      # shellcheck disable=SC2178
+      opt=${opt//-/_}
+
+      if [[ -z "$optn" ]] ; then
+        # shellcheck disable=SC2128
+        optn=$opt
+      else
+        # shellcheck disable=SC2015
+        [[ -z "$optk" ]] && ( declare -F showOptValWarn &>/dev/null && showOptValWarn "--$optn" ) || declare "$optn=true"
+        # shellcheck disable=SC2128
+        optn=$opt
+      fi
+
+      if [[ ! $SUPPORTED_OPTS\  =~ !?$optn\  ]] ; then
+        declare -F showOptWarn &>/dev/null && showOptWarn "--${optn//_/-}"
+        shift && continue
+      fi
+
+      if [[ ${BASH_REMATCH[0]:0:1} == "!" ]] ; then
+        declare "$optn=true" ; unset optn ; optk=true
+      else
+        unset optk
+      fi
+
+      shift && continue
+    fi
+  else
+    if [[ -n "$optn" ]] ; then
+      # shellcheck disable=SC2015
+      [[ -n "${!optn}" && $MERGEABLE_OPTS\  =~ $optn\  ]] && declare "$optn=${!optn} $1" || declare "$optn=$1"
+
+      unset optn && shift && continue
+    fi
+  fi
+
+  optt="$optt $1" ; shift
+
+done
+
+[[ -n "$optn" ]] && declare "$optn=true"
+
+unset opt optn optm optk
+
+# shellcheck disable=SC2015,SC2086
+[[ -n "$KEEP_OPTS" ]] && main $optv || main ${optt:1}
+
+########################################################################################
+
