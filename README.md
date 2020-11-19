@@ -1,7 +1,7 @@
 <p align="center"><a href="#readme"><img src="https://gh.kaos.st/jira-avatar-replacer.svg"/></a></p>
 
 <p align="center">
-  <a href="https://travis-ci.com/github/essentialkaos/jira-avatars-replacer"><img src="https://travis-ci.com/essentialkaos/jira-avatars-replacer.svg"></a>
+  <a href="https://github.com/essentialkaos/jira-avatars-replacer/actions"><img src="https://github.com/essentialkaos/jira-avatars-replacer/workflows/CI/badge.svg" alt="GitHub Actions Status" /></a>
   <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
 </p>
 
