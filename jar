@@ -4,7 +4,7 @@
 ########################################################################################
 
 APP="jar"
-VER="1.0.0"
+VER="1.2.0"
 DESC="JIRA HQ avatars replacer"
 
 ########################################################################################
@@ -42,17 +42,19 @@ CL_BL_GREY="\e[1;${GREY};49m"
 
 ########################################################################################
 
-MIN_WIDTH=64
-MIN_HEIGHT=64
+MIN_WIDTH=512
+MIN_HEIGHT=512
+MIN_WIDTH_SUPER=1024
+MIN_HEIGHT_SUPER=1024
 
 ########################################################################################
 
-SUPPORTED_OPTS="!no_colors !help !usage !version !ver"
-SHORT_OPTS="nc:!no_colors h:!help v:!version"
+SUPPORTED_OPTS="!no_colors !super !help !usage !version !ver"
+SHORT_OPTS="nc:!no_colors S:!super h:!help v:!version"
 
 ########################################################################################
 
-data_dir="${JIRA_DIR:-/srv/jira-data}/data/avatars"
+data_dir=""
 
 ########################################################################################
 
@@ -73,9 +75,41 @@ main() {
     exit 0
   fi
 
+  data_dir=$(findDataDir)
+
   checkConfiguration
 
   update "$@"
+}
+
+findDataDir() {
+  if [[ -n "$JIRA_DIR" ]] ; then
+    echo "$JIRA_DIR"
+    return
+  fi
+
+  local dir dirs jira_home
+
+  dirs=(
+    "/opt/jira"
+    "/srv/jira"
+    "/srv2/jira"
+    "/srv3/jira"
+    "/srv4/jira"
+    "/usr/local/jira"
+    "/var/atlassian/application-data/jira"
+  )
+
+  for dir in ${dirs[@]} ; do
+    if [[ -f "${dir}/bin/setenv.sh" ]] ; then
+      jira_home=$(grep 'JIRA_HOME="' "${dir}/bin/setenv.sh" | head -1 | cut -f2 -d'=' | tr -d '"')
+
+      if [[ -d "$jira_home" ]] ; then
+        echo "$jira_home"
+        return
+      fi
+    fi
+  done
 }
 
 checkConfiguration() {
@@ -176,17 +210,31 @@ convertAvatar() {
 
   local new_size output
 
-  case $size in
-    "")            new_size="96x96" ;;
-    "xsmall")      new_size="32x32" ;;
-    "small")       new_size="48x48" ;;
-    "medium")      new_size="64x64" ;;
-    "xlarge")      new_size="128x128" ;;
-    "xxlarge")     new_size="192x192" ;;
-    "xxxlarge")    new_size="256x256" ;;
-    "xxlarge@2x")  new_size="384x384" ;;
-    "xxxlarge@2x") new_size="512x512" ;;
-  esac
+  if [[ -z "$super" ]] ; then
+    case $size in
+      "")            new_size="96x96"   ;;
+      "xsmall")      new_size="32x32"   ;;
+      "small")       new_size="48x48"   ;;
+      "medium")      new_size="64x64"   ;;
+      "xlarge")      new_size="128x128" ;;
+      "xxlarge")     new_size="192x192" ;;
+      "xxxlarge")    new_size="256x256" ;;
+      "xxlarge@2x")  new_size="384x384" ;;
+      "xxxlarge@2x") new_size="512x512" ;;
+    esac
+  else
+    case $size in
+      "")            new_size="192x192"   ;;
+      "xsmall")      new_size="64x64"     ;;
+      "small")       new_size="96x96"     ;;
+      "medium")      new_size="128x128"   ;;
+      "xlarge")      new_size="256x256"   ;;
+      "xxlarge")     new_size="384x384"   ;;
+      "xxxlarge")    new_size="512x512"   ;;
+      "xxlarge@2x")  new_size="768x768"   ;;
+      "xxxlarge@2x") new_size="1024x1024" ;;
+    esac
+  fi
 
   if [[ -z "$size" ]] ; then
     output="${id}_${uuid}.png"
