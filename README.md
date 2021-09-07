@@ -34,6 +34,7 @@ Usage: jar {options} image avatar-id
 
 Options
 
+  --super, -s        Super resolution (x4)
   --no-color, -nc    Disable colors in output
   --help, -h         Show this help message
   --version, -v      Show information about version
