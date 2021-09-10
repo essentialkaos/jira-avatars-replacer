@@ -16,7 +16,7 @@
 #### From GitHub repository
 
 ```bash
-curl -fL# -o jar https://kaos.sh/jira-avatar-replacer/jar
+curl -fL# -o jar https://kaos.sh/jira-avatars-replacer/jar
 chmod +x jar
 sudo mv jar /usr/bin/
 ```
@@ -24,7 +24,7 @@ sudo mv jar /usr/bin/
 Also, you can use the latest version of utility without installation:
 
 ```bash
-bash <(curl -fsSL https://kaos.sh/jira-avatar-replacer/jar) # pass options here
+bash <(curl -fsSL https://kaos.sh/jira-avatars-replacer/jar) # pass options here
 ```
 
 ### Usage
