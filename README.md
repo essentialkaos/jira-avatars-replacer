@@ -16,12 +16,15 @@
 #### From GitHub repository
 
 ```bash
+# Download rsz utility for images resizing
+bash <(curl -fsSL https://apps.kaos.st/get) rsz
+# Download utility
 curl -fL# -o jar https://kaos.sh/jira-avatars-replacer/jar
 chmod +x jar
-sudo mv jar /usr/bin/
+sudo mv jar rsz /usr/bin/
 ```
 
-Also, you can use the latest version of utility without installation:
+Also, you can use the latest version of utility without installation (_but you have to install_ [`rsz`](https://kaos.sh/rsz) _utility first_):
 
 ```bash
 bash <(curl -fsSL https://kaos.sh/jira-avatars-replacer/jar) # pass options here

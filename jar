@@ -4,7 +4,7 @@
 ########################################################################################
 
 APP="jar"
-VER="1.2.0"
+VER="1.3.0"
 DESC="JIRA HQ avatars replacer"
 
 ########################################################################################
@@ -42,13 +42,6 @@ CL_BL_GREY="\e[1;${GREY};49m"
 
 ########################################################################################
 
-MIN_WIDTH=512
-MIN_HEIGHT=512
-MIN_WIDTH_SUPER=1024
-MIN_HEIGHT_SUPER=1024
-
-########################################################################################
-
 SUPPORTED_OPTS="!no_colors !super !help !usage !version !ver"
 SHORT_OPTS="nc:!no_colors S:!super h:!help v:!version"
 
@@ -58,6 +51,12 @@ data_dir=""
 
 ########################################################################################
 
+# Main function
+#
+# *: All arguments passed to utility
+#
+# Code: No
+# Echo: No
 main() {
   if [[ ! -t 1 || -n "$no_colors" ]] ; then
     unset NORM BOLD UNLN RED GREEN YELLOW BLUE MAG CYAN GREY DARK
@@ -82,6 +81,10 @@ main() {
   update "$@"
 }
 
+# Search for JIRA_HOME directory
+#
+# Code: No
+# Echo: No
 findDataDir() {
   # shellcheck disable=SC2153
   if [[ -n "$JIRA_HOME" ]] ; then
@@ -113,6 +116,10 @@ findDataDir() {
   done
 }
 
+# Check utility configuration
+#
+# Code: No
+# Echo: No
 checkConfiguration() {
   if [[ -z "$data_dir" ]] ; then
     error "JIRA_HOME variable must be set"
@@ -129,12 +136,19 @@ checkConfiguration() {
     exit 1 
   fi
 
-  if ! isAppInstalled "convert" ; then
+  if ! isAppInstalled "rsz" ; then
     error "This utility requires ImageMagick"
     exit 1
   fi
 }
 
+# Update avatar image to HQ version
+#
+# 1: Path to image file (String)
+# 2: Avatar ID (Number)
+#
+# Code: No
+# Echo: No
 update() {
   local image="$1"
   local id="$2"
@@ -164,11 +178,17 @@ update() {
 
   show "\nUpdating avatars to HQ versions…\n" $BOLD
 
-  convertAvatars "$image" "$id" "$uuid"
+  generateAvatars "$image" "$id" "$uuid"
 
   show "\nUpdating complete!\n" $GREEN
 }
 
+# Check image file
+#
+# 1: Path to image file (String)
+#
+# Code: No
+# Echo: No
 checkImage() {
   local image="$1"
 
@@ -176,19 +196,17 @@ checkImage() {
     error "File $image doesn't exist"
     exit 1
   fi
-
-  if [[ $(getImageWidth "$image") -lt $MIN_WIDTH ]] ; then
-    error "Image width must be $MIN_WIDTH pixels or more"
-    exit 1
-  fi
-
-  if [[ $(getImageHeight "$image") -lt $MIN_HEIGHT ]] ; then
-    error "Image height must be $MIN_HEIGHT pixels or more"
-    exit 1
-  fi
 }
 
-convertAvatars() {
+# Resize given image to different sizes
+#
+# 1: Path to image file (String)
+# 2: Avatar ID (Number)
+# 3: Avatar UUID (String)
+#
+# Code: No
+# Echo: No
+generateAvatars() {
   local image="$1"
   local id="$2"
   local uuid="$3"
@@ -196,14 +214,23 @@ convertAvatars() {
   local size sizes
   sizes=("xsmall" "small" "medium" "xlarge" "xxlarge" "xxxlarge" "xxlarge@2x" "xxxlarge@2x")
 
-  convertAvatar "$image" "$id" "$uuid" ""
+  resizeAvatar "$image" "$id" "$uuid" ""
 
   for size in "${sizes[@]}" ; do
-    convertAvatar "$image" "$id" "$uuid" "$size"
+    resizeAvatar "$image" "$id" "$uuid" "$size"
   done
 }
 
-convertAvatar() {
+# Resize avatar to different sizes
+#
+# 1: Path to image file (String)
+# 2: Avatar ID (Number)
+# 3: Avatar UUID (String)
+# 4: Size (String) [Optional]
+#
+# Code: No
+# Echo: No
+resizeAvatar() {
   local image="$1"
   local id="$2"
   local uuid="$3"
@@ -243,7 +270,7 @@ convertAvatar() {
     output="${id}_${size}_${uuid}.png"
   fi
 
-  convert "$image" -filter Lanczos -resize "$new_size" "$data_dir/$output" &> /dev/null
+  rsz -f Lanczos "$image" "$new_size" "$data_dir/$output" &> /dev/null
 
   if [[ $? -eq 0 ]] ; then
     show "${CL_GREEN}✔  ${CL_NORM}$output ${CL_DARK}→ $new_size${CL_NORM}"
@@ -252,6 +279,12 @@ convertAvatar() {
   fi
 }
 
+# Returns UUID for avatar with given ID
+#
+# 1: ID (Number)
+#
+# Code: No
+# Echo: UUID (String)
 getAvatarUUID() {
   local id="$1"
   local avatar uuid
@@ -266,14 +299,6 @@ getAvatarUUID() {
   uuid=$(basename "$avatar" | sed 's/.png//' | cut -f3 -d'_')
 
   echo "$uuid"
-}
-
-getImageWidth() {
-  identify -format "%[fx:w]" "$1"
-}
-
-getImageHeight() {
-  identify -format "%[fx:h]" "$1"
 }
 
 # Checks if app is installed
