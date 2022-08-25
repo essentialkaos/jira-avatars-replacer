@@ -19,21 +19,21 @@
 # Download rsz utility for images resizing
 bash <(curl -fsSL https://apps.kaos.st/get) rsz
 # Download utility
-curl -fL# -o jar https://kaos.sh/jira-avatars-replacer/jar
-chmod +x jar
-sudo mv jar rsz /usr/bin/
+curl -fL# -o jr https://kaos.sh/jira-avatars-replacer/jr
+chmod +x jr
+sudo mv jr rsz /usr/bin/
 ```
 
 Also, you can use the latest version of utility without installation (_but you have to install_ [`rsz`](https://kaos.sh/rsz) _utility first_):
 
 ```bash
-bash <(curl -fsSL https://kaos.sh/jira-avatars-replacer/jar) # pass options here
+bash <(curl -fsSL https://kaos.sh/jira-avatars-replacer/jr) # pass options here
 ```
 
 ### Usage
 
 ```
-Usage: jar {options} image avatar-id
+Usage: jr {options} image avatar-id
 
 Options
 
@@ -44,7 +44,7 @@ Options
 
 Examples
 
-  JIRA_DIR=/opt/jira-data jar image.png 18311
+  JIRA_DIR=/opt/jira-data sudo jr image.png 18311
   Update avatar with ID 18311
 
 ```

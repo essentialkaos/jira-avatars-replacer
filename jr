@@ -3,7 +3,7 @@
 
 ########################################################################################
 
-APP="jar"
+APP="jr"
 VER="1.3.0"
 DESC="JIRA HQ avatars replacer"
 
@@ -346,7 +346,7 @@ error() {
 # Echo: No
 usage() {
   show ""
-  show "${CL_BOLD}Usage:${CL_NORM} jar ${CL_GREEN}{options}${CL_NORM} image avatar-id"
+  show "${CL_BOLD}Usage:${CL_NORM} jr ${CL_GREEN}{options}${CL_NORM} image avatar-id"
   show ""
   show "Options" $BOLD
   show ""
@@ -364,7 +364,7 @@ usage() {
   show ""
   show "Examples" $BOLD
   show ""
-  show "  JIRA_HOME=/opt/jira-data jar image.png 18311"
+  show "  JIRA_HOME=/opt/jira-data sudo jr image.png 18311"
   show "  Update avatar with ID 18311" $DARK
   show ""
 }
