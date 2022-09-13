@@ -44,7 +44,7 @@ Options
 
 Examples
 
-  JIRA_DIR=/opt/jira-data sudo jr image.png 18311
+  JIRA_HOME=/opt/jira-data sudo jr image.png 18311
   Update avatar with ID 18311
 
 ```
