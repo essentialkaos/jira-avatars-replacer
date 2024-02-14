@@ -4,7 +4,7 @@
 ########################################################################################
 
 APP="jr"
-VER="1.3.0"
+VER="1.3.1"
 DESC="JIRA HQ avatars replacer"
 
 ########################################################################################
@@ -137,7 +137,8 @@ checkConfiguration() {
   fi
 
   if ! isAppInstalled "rsz" ; then
-    error "This utility requires ImageMagick"
+    error "This utility requires rsz."
+    error "You can get it from https://kaos.sh/rsz"
     exit 1
   fi
 }
