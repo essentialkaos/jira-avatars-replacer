@@ -1,8 +1,8 @@
-<p align="center"><a href="#readme"><img src="https://gh.kaos.st/jira-avatar-replacer.svg"/></a></p>
+<p align="center"><a href="#readme"><img src=".github/images/card.svg"/></a></p>
 
 <p align="center">
   <a href="https://github.com/essentialkaos/jira-avatars-replacer/actions"><img src="https://github.com/essentialkaos/jira-avatars-replacer/workflows/CI/badge.svg" alt="GitHub Actions Status" /></a>
-  <a href="#license"><img src="https://gh.kaos.st/apache2.svg"></a>
+  <a href="#license"><img src=".github/images/license.svg"></a>
 </p>
 
 <p align="center"><a href="#installation">Installation</a> • <a href="#usage">Usage</a> • <a href="#license">License</a></p>
@@ -32,22 +32,7 @@ bash <(curl -fsSL https://kaos.sh/jira-avatars-replacer/jr) # pass options here
 
 ### Usage
 
-```
-Usage: jr {options} image avatar-id
-
-Options
-
-  --super, -s        Super resolution (x4)
-  --no-color, -nc    Disable colors in output
-  --help, -h         Show this help message
-  --version, -v      Show information about version
-
-Examples
-
-  JIRA_HOME=/opt/jira-data sudo jr image.png 18311
-  Update avatar with ID 18311
-
-```
+<img src=".github/images/usage.svg" />
 
 ### License
 
