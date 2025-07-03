@@ -246,7 +246,7 @@ resizeAvatar() {
       "small")       new_size="48x48"     ;;
       "small@3x")    new_size="144x144"   ;;
       "medium")      new_size="64x64"     ;;
-      "large@3x"     new_size="288x288"   ;;
+      "large@3x")    new_size="288x288"   ;;
       "xlarge")      new_size="128x128"   ;;
       "xxlarge")     new_size="192x192"   ;;
       "xxxlarge")    new_size="256x256"   ;;
@@ -262,7 +262,7 @@ resizeAvatar() {
       "small")       new_size="96x96"     ;;
       "small@3x")    new_size="288x288"   ;;
       "medium")      new_size="128x128"   ;;
-      "large@3x"     new_size="432x432"   ;;
+      "large@3x")    new_size="432x432"   ;;
       "xlarge")      new_size="256x256"   ;;
       "xxlarge")     new_size="384x384"   ;;
       "xxxlarge")    new_size="512x512"   ;;
